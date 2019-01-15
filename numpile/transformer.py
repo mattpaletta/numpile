@@ -1,12 +1,12 @@
 import ctypes
 import numpy as np
 import string
-import llvmlite.llvmpy.core as ll_core
+# import llvmlite.llvmpy.core as ll_core
 
-from numpile import engine
+from numpile import engine, create_execution_engine
 from numpile.lang import TVar, TFun
 from numpile.pytypes import array, int32, int64, int_type, double_type, \
-    float_type, void_type, pointer
+    float_type, void_type, pointer, struct_type
 
 
 def naming():
@@ -18,7 +18,7 @@ def naming():
 
 
 def mangler(fname, sig):
-    return fname + str(hash(tuple(sig)))
+    return fname + str(abs(hash(tuple(sig))))
 
 
 _nptypemap = {
@@ -34,30 +34,75 @@ def wrap_module(sig, llfunc):
     return dispatch
 
 
+def compile_ir(engine, llvm_ir):
+    """
+    Compile the LLVM IR string with the given engine.
+    The compiled module object is returned.
+    """
+    # Create a LLVM module object from the IR
+    import llvmlite.binding as llvm
+
+#     llvm_ir = """
+#     define double @add4531207233431041901(double %a, double %b) {
+# entry:
+#   %0 = alloca double
+#   store double %a, double* %0
+#   %1 = alloca double
+#   store double %b, double* %1
+#   %retval = alloca double
+#   %2 = load double, double* %0
+#   %3 = load double, double* %1
+#   %4 = fadd double %2, %3
+#   store double %4, double* %retval
+#   br label %exit
+#
+# exit:
+#   %5 = load double, double* %retval
+#   ret double %5
+# }
+# """
+
+    llvm.initialize()
+    llvm.initialize_native_target()
+    llvm.initialize_native_asmprinter()  # yes, even this one
+
+
+    mod = llvm.parse_assembly(llvm_ir)
+    mod.verify()
+    # Now add the module and make sure it is ready for execution
+    engine.add_module(mod)
+    engine.finalize_object()
+    engine.run_static_constructors()
+    return mod
+
 def wrap_function(func, engine):
     args = func.type.pointee.args
     ret_type = func.type.pointee.return_type
     ret_ctype = wrap_type(ret_type)
-    args_ctypes = map(wrap_type, args)
+    args_ctypes = list(map(wrap_type, args))
 
-    functype = ctypes.CFUNCTYPE(ret_ctype, *args_ctypes)
-    fptr = engine.get_pointer_to_function(func)
+    mod = compile_ir(engine, str(func))
 
-    cfunc = functype(fptr)
+    # Look up the function pointer (a Python int)
+    func_ptr = engine.get_function_address(func.name)
+
+    # Run the function via ctypes
+    cfunc = ctypes.CFUNCTYPE(ret_ctype, *args_ctypes)(func_ptr)
     cfunc.__name__ = func.name
     return cfunc
 
+
 def wrap_type(llvm_type):
     kind = type(llvm_type)
-    if kind == int_type:
+    if kind == type(int_type):
         ctype = getattr(ctypes, "c_int"+str(llvm_type.width))
-    elif kind == double_type:
+    elif kind == type(double_type):
         ctype = ctypes.c_double
-    elif kind == float_type:
+    elif kind == type(float_type):
         ctype = ctypes.c_float
-    elif kind == void_type:
+    elif kind == type(void_type):
         ctype = None
-    elif kind == pointer:
+    elif kind == type(pointer):
         pointee = llvm_type.pointee
         p_kind = pointee.kind
         if p_kind == int_type:
@@ -70,7 +115,7 @@ def wrap_type(llvm_type):
             ctype = ctypes.c_void_p
         else:
             ctype = ctypes.POINTER(wrap_type(pointee))
-    elif kind == struct_type:
+    elif kind == type(struct_type):
         struct_name = llvm_type.name.split('.')[-1]
         struct_name = struct_name.encode('ascii')
         struct_type = None

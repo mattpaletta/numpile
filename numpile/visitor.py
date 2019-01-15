@@ -74,7 +74,6 @@ class PythonVisitor(ast.NodeVisitor):
     def visit_FunctionDef(self, node):
         stmts = list(node.body)
         stmts = list(map(self.visit, stmts))
-        #TODO: Add function arguemnts
         args = list(map(self.visit, node.args.args))
         res = Fun(node.name, args, stmts)
         return res

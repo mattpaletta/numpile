@@ -66,9 +66,9 @@ def codegen(ast, specializer, retty, argtys):
 
     cgen = LLVMEmitter(specializer, retty, argtys)
     mod = cgen.visit(ast)
-    #cgen.function.verify()
+    # cgen.function.verify()
     print(cgen.function)
-    #print(target.emit_assembly(mod))
+    # print(target.emit_assembly(mod))
     return cgen.function
 
 

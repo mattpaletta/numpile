@@ -21,7 +21,7 @@ double_type = Type.double()
 bool_type   = Type.int(1)
 void_type   = Type.void()
 void_ptr    = pointer(Type.int(8))
-struct_type = Type.struct
+struct_type = Type.struct([])
 
 def array_type(elt_type):
     return Type.struct([

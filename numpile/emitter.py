@@ -4,7 +4,7 @@ from numpy import long
 
 from numpile import module
 from numpile.lang import TVar, is_array, Var
-from numpile.pytypes import to_lltype, double_type, bool_type, void_type
+from numpile.pytypes import to_lltype, double_type, bool_type, void_type, int_type
 from numpile.transformer import mangler
 
 
@@ -71,16 +71,16 @@ class LLVMEmitter(object):
 
     def visit_LitInt(self, node):
         ty = self.specialize(node)
-        if ty is double_type:
+        if ty is type(double_type):
             return ll_core.Constant.real(double_type, node.n)
-        elif ty == int_type:
+        elif ty == type(int_type):
             return ll_core.Constant.int(int_type, node.n)
 
     def visit_LitFloat(self, node):
         ty = self.specialize(node)
-        if ty is double_type:
+        if ty is type(double_type):
             return ll_core.Constant.real(double_type, node.n)
-        elif ty == int_type:
+        elif ty == type(int_type):
             return ll_core.Constant.int(int_type, node.n)
 
     def visit_Noop(self, node):
@@ -88,7 +88,7 @@ class LLVMEmitter(object):
 
     def visit_Fun(self, node):
         rettype = to_lltype(self.retty)
-        argtypes = map(to_lltype, self.argtys)
+        argtypes = list(map(to_lltype, self.argtys))
         # Create a unique specialized name
         func_name = mangler(node.fname, self.argtys)
         self.start_function(func_name, module, rettype, argtypes)
@@ -123,7 +123,7 @@ class LLVMEmitter(object):
         if rettype is not void_type:
             self.locals['retval'] = self.builder.alloca(rettype, "retval")
 
-        map(self.visit, node.body)
+        list(map(self.visit, node.body))
         self.end_function()
 
     def visit_Index(self, node):

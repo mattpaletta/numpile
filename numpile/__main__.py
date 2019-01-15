@@ -103,8 +103,8 @@ if __name__ == "__main__":
         def add(a, b):
             return a + b
 
-        a = 3.1415926
-        b = 2.7182818
+        a = 3
+        b = 2
         print('Result:', add(a, b))
 
     #transform()
