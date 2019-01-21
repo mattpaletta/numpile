@@ -68,6 +68,21 @@ def compile_ir(engine, llvm_ir):
 
     mod = llvm.parse_assembly(llvm_ir)
     mod.verify()
+
+    # Optionally, could use passManagerBuilder to reuse the same options across JIT.
+    funcPass = llvm.create_function_pass_manager(module = mod)
+    funcPass.initialize()
+
+    funcPass.add_dead_arg_elimination_pass()
+    funcPass.add_dead_code_elimination_pass()
+
+    passManager = llvm.create_pass_manager_builder()
+    passManager.opt_level = 3
+    passManager.loop_vectorize = True
+    passManager.slp_vectorize = False
+
+    funcPass.finalize()
+
     # Now add the module and make sure it is ready for execution
     engine.add_module(mod)
     engine.finalize_object()
