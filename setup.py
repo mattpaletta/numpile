@@ -1,10 +1,3 @@
-import inspect
-import os
-import subprocess
-import sys
-from distutils.command.build import build
-from setuptools.command.install import install
-
 try:
     from setuptools import setup, find_packages
 except ImportError:

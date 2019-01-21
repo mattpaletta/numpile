@@ -46,7 +46,7 @@ def specialize(ast, infer_ty, mgu):
         argtys = [apply(specializer, ty) for ty in types]
         print('Specialized Function:', TFun(argtys, retty))
 
-        if determined(retty) and all(map(determined, argtys)):
+        if determined(retty) and all(list(map(determined, argtys))):
             key = mangler(ast.fname, argtys)
             # Don't recompile after we've specialized.
             if key in function_cache:

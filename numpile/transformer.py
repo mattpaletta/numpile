@@ -60,7 +60,6 @@ def compile_ir(engine, llvm_ir):
 #   %5 = load double, double* %retval
 #   ret double %5
 # }
-# """
 
     llvm.initialize()
     llvm.initialize_native_target()

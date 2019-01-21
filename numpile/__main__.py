@@ -1,6 +1,8 @@
 import llvmlite.llvmpy.core as ll_core
 
 # All these initializations are required for code generation!
+import numpy as np
+
 from numpile.autojit import autojit
 from numpile.solve import apply, solve
 from numpile.transformer import TypeInfer
@@ -103,15 +105,28 @@ if __name__ == "__main__":
         def add(a, b):
             return a + b
 
-        a = 3
-        b = 2
+        a = 3.313495813895
+        b = 2.3421983475
         print('Result:', add(a, b))
+
+    def test_autojit2():
+        @autojit
+        def dot2(a, b):
+            c = 0
+            n = 3 # a.shape[0]
+            for i in range(n):
+                c += a[i] * b[i]
+            return c
+
+        print('Result', dot2(np.array([1, 2, 3], dtype = np.int64), np.array([4, 5, 6], dtype = np.int64)))
+
 
     #transform()
     #transform2()
     #constraint()
     #test_solve3()
     test_autojit()
+    test_autojit2()
 
     # @autojit
     # def dot(a, b):

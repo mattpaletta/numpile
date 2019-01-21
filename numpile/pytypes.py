@@ -13,7 +13,6 @@ array_int32 = array(int32)
 array_int64 = array(int64)
 array_double64 = array(double64)
 
-
 pointer     = Type.pointer
 int_type    = Type.int()
 float_type  = Type.float()

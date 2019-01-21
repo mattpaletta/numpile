@@ -75,6 +75,8 @@ class LLVMEmitter(object):
             return ll_core.Constant.real(double_type, node.n)
         elif ty == type(int_type):
             return ll_core.Constant.int(int_type, node.n)
+        else:
+            raise NotImplementedError
 
     def visit_LitFloat(self, node):
         ty = self.specialize(node)
@@ -82,6 +84,8 @@ class LLVMEmitter(object):
             return ll_core.Constant.real(double_type, node.n)
         elif ty == type(int_type):
             return ll_core.Constant.int(int_type, node.n)
+        else:
+            raise NotImplementedError
 
     def visit_Noop(self, node):
         pass
@@ -121,7 +125,8 @@ class LLVMEmitter(object):
 
         # Setup the register for return type.
         if rettype is not void_type:
-            self.locals['retval'] = self.builder.alloca(rettype, "retval")
+            retref = self.builder.alloca(rettype, size = 32, name = "retval")
+            self.locals['retval'] = retref
 
         list(map(self.visit, node.body))
         self.end_function()
